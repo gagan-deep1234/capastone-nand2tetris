@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hack Computer Capstone Studio — Nand to Tetris I</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-badge">HACK-16</div>
+      <div>
+        <h1>Make the Computer Draw a Box</h1>
+        <p class="subtitle">Nand to Tetris I (ETCCNT301) — Part A (HDL) · Part B (Assembler) · Part C (Box.asm)</p>
+      </div>
+    </div>
+
+    <div class="k-panel">
+      <label for="k-input">Personal No. <strong>K</strong></label>
+      <input id="k-input" type="number" min="0" max="99" value="41" />
+      <button id="apply-k-btn" class="btn btn-primary">Apply K</button>
+    </div>
+  </header>
+
+  <section class="k-summary" id="k-summary">
+    <div class="pill"><span>Box Row:</span> <strong id="sum-row">41</strong></div>
+    <div class="pill"><span>Height:</span> <strong>20 px</strong></div>
+    <div class="pill"><span>Width:</span> <strong id="sum-width">32 px (2 words)</strong></div>
+    <div class="pill"><span>Start Addr:</span> <strong id="sum-addr">17696</strong></div>
+    <div class="pill pill-accent"><strong id="sum-feature">K mod 3 = 2: Warn on duplicate labels</strong></div>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim-tab">Part C · Hack Screen &amp; CPU</button>
+    <button class="tab" data-tab="asm-tab">Part B · Python Assembler</button>
+    <button class="tab" data-tab="hdl-tab">Part A · HDL Architecture</button>
+  </nav>
+
+  <main class="container">
+    <!-- TAB 1: PART C SIMULATOR -->
+    <section id="sim-tab" class="tab-panel active">
+      <div class="sim-grid">
+        <div class="card screen-card">
+          <div class="card-header">
+            <h2>Hack Display (512 × 256)</h2>
+            <div class="sim-controls">
+              <button id="gen-load-box-btn" class="btn btn-primary">Load Box.asm (K)</button>
+              <button id="run-toggle-btn" class="btn btn-success">Run</button>
+              <button id="step-btn" class="btn">Step</button>
+              <button id="reset-btn" class="btn btn-danger">Reset</button>
+            </div>
+          </div>
+
+          <div class="canvas-wrap">
+            <canvas id="hack-screen" width="512" height="256"></canvas>
+          </div>
+
+          <div class="kbd-bar">
+            <button id="hold-key-btn" class="btn btn-hold">Hold Mouse / Spacebar to Press Key</button>
+            <div class="kbd-status">
+              <span>KBD (RAM[24576]):</span>
+              <code id="kbd-val">0</code>
+              <span class="hint">(Focus anywhere outside editors &amp; hold any keyboard key)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card telemetry-card">
+          <div class="card-header">
+            <h2>CPU &amp; Memory State</h2>
+            <span class="status-badge" id="run-status">Paused</span>
+          </div>
+
+          <div class="reg-grid">
+            <div class="reg-box"><span>PC</span><strong id="reg-pc">0</strong></div>
+            <div class="reg-box"><span>A</span><strong id="reg-a">0</strong></div>
+            <div class="reg-box"><span>D</span><strong id="reg-d">0</strong></div>
+            <div class="reg-box"><span>Cycles</span><strong id="reg-cycles">0</strong></div>
+          </div>
+
+          <div class="ram-init-row">
+            <label for="r0-init">Init R0:</label>
+            <input id="r0-init" type="number" value="0" />
+            <label for="r1-init">R1:</label>
+            <input id="r1-init" type="number" value="0" />
+            <button id="load-current-asm-btn" class="btn">Load Editor .asm</button>
+          </div>
+
+          <h3>RAM[0..23] (R0–R15 &amp; Variables)</h3>
+          <div id="ram-table" class="ram-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: PART B ASSEMBLER -->
+    <section id="asm-tab" class="tab-panel">
+      <div class="asm-toolbar card">
+        <div class="toolbar-left">
+          <label for="sample-select">Load File:</label>
+          <select id="sample-select"></select>
+          <button id="assemble-btn" class="btn btn-primary">Assemble (.asm → .hack)</button>
+          <button id="assemble-run-btn" class="btn btn-success">Assemble &amp; Run in Simulator</button>
+        </div>
+        <div class="toolbar-right">
+          <button id="download-asm-btn" class="btn">Download .asm</button>
+          <button id="download-hack-btn" class="btn">Download .hack</button>
+          <button id="download-sym-btn" class="btn">Download symbols.txt</button>
+        </div>
+      </div>
+
+      <div class="asm-grid">
+        <div class="card">
+          <div class="card-header">
+            <h2>Hack Assembly Source (.asm)</h2>
+            <span id="asm-line-count" class="muted">0 lines</span>
+          </div>
+          <textarea id="asm-editor" spellcheck="false"></textarea>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>16-bit Machine Code (.hack)</h2>
+            <span id="hack-count" class="muted">0 instructions</span>
+          </div>
+          <pre id="hack-output" class="code-box"></pre>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>Symbols &amp; Diagnostics</h2>
+            <span id="diag-status" class="muted">Ready</span>
+          </div>
+          <div id="diag-messages" class="diag-box"></div>
+          <h3>symbols.txt Preview</h3>
+          <pre id="symbols-output" class="code-box small"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: PART A HDL -->
+    <section id="hdl-tab" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <h2>Part A — Hack Computer HDL Chips</h2>
+          <div class="hdl-buttons">
+            <button class="btn hdl-select active" data-hdl="CPU.hdl">CPU.hdl</button>
+            <button class="btn hdl-select" data-hdl="Memory.hdl">Memory.hdl</button>
+            <button class="btn hdl-select" data-hdl="Computer.hdl">Computer.hdl</button>
+          </div>
+        </div>
+        <div class="hdl-info">
+          <strong>Memory Map:</strong>
+          <code>0x0000–0x3FFF</code> RAM16K (16K) ·
+          <code>0x4000–0x5FFF</code> Screen (8K, 512×256) ·
+          <code>0x6000</code> Keyboard (16-bit)
+        </div>
+        <pre id="hdl-viewer" class="code-box hdl-box"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+// Supporting Lab Chip - ALU.hdl
+// Hack 16-bit Arithmetic Logic Unit (Project 2)
+
+CHIP ALU {
+    IN
+        x[16], y[16],  // 16-bit inputs
+        zx, // zero the x input?
+        nx, // negate the x input?
+        zy, // zero the y input?
+        ny, // negate the y input?
+        f,  // compute (out = x + y) or (out = x & y)?
+        no; // negate the out output?
+
+    OUT
+        out[16], // 16-bit output
+        zr,      // 1 if (out == 0), 0 otherwise
+        ng;      // 1 if (out < 0),  0 otherwise
+
+    PARTS:
+    // x processing: zx then nx
+    Mux16(a=x, b=false, sel=zx, out=x1);
+    Not16(in=x1, out=notX1);
+    Mux16(a=x1, b=notX1, sel=nx, out=x2);
+
+    // y processing: zy then ny
+    Mux16(a=y, b=false, sel=zy, out=y1);
+    Not16(in=y1, out=notY1);
+    Mux16(a=y1, b=notY1, sel=ny, out=y2);
+
+    // f: 1 -> Add16(x2, y2), 0 -> And16(x2, y2)
+    Add16(a=x2, b=y2, out=addXY);
+    And16(a=x2, b=y2, out=andXY);
+    Mux16(a=andXY, b=addXY, sel=f, out=fOut);
+
+    // no: negate output and extract ng (MSB) and halves for zr check
+    Not16(in=fOut, out=notFOut);
+    Mux16(a=fOut, b=notFOut, sel=no, out=out, out[15]=ng, out[0..7]=lowByte, out[8..15]=highByte);
+
+    // zr = 1 iff all 16 bits are 0
+    Or8Way(in=lowByte, out=orLow);
+    Or8Way(in=highByte, out=orHigh);
+    Or(a=orLow, b=orHigh, out=notZero);
+    Not(in=notZero, out=zr);
+}

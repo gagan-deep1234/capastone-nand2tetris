@@ -1,0 +1,11 @@
+// Supporting Lab Chip - Bit.hdl
+// 1-bit Register (Project 3)
+
+CHIP Bit {
+    IN in, load;
+    OUT out;
+
+    PARTS:
+    Mux(a=dffOut, b=in, sel=load, out=nextIn);
+    DFF(in=nextIn, out=dffOut, out=out);
+}
